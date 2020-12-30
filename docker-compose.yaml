@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:13.0
+    restart: always
+    container_name: django_librest_postgres
+    env_file:
+      - .env
+    volumes:
+      - ./database:/var/lib/postgresql/data
+
+  uwsgi:
+    build: .
+    restart: always
+    container_name: django_librest_uwsgi
+    volumes:
+    - ./config:/django_librest/config
+    - ./static:/django_librest/static
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+
+  nginx:
+    image: nginx:1.18
+    restart: always
+    container_name: django_librest_nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - ./static:/static
+    depends_on:
+      - postgres
+      - uwsgi
